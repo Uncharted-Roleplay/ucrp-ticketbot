@@ -256,7 +256,8 @@
     "feedbackCommentSaved": "✅ O teu comentario foi adicionado.",
     "orphanedTicketReason": "O canal do ticket já não existe",
     "cannotCreateTickets": "❌ Não tens permissão para abrir tickets.",
-    "ticketOpenInProgress": "⏳ O teu ticket já está a ser criado, aguarda um momento."
+    "ticketOpenInProgress": "⏳ O teu ticket já está a ser criado, aguarda um momento.",
+    "onlyCreatorCanRate": "❌ Só quem abriu este ticket o pode avaliar."
   },
   "priorities": {
     "low": "🟢 Baixa",

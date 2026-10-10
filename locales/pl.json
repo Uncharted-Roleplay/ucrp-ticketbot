@@ -256,7 +256,8 @@
     "feedbackCommentSaved": "✅ Twój komentarz został dodany.",
     "orphanedTicketReason": "Kanał zgłoszenia już nie istnieje",
     "cannotCreateTickets": "❌ Nie możesz otwierać zgłoszeń.",
-    "ticketOpenInProgress": "⏳ Twoje zgłoszenie jest już tworzone, poczekaj chwilę."
+    "ticketOpenInProgress": "⏳ Twoje zgłoszenie jest już tworzone, poczekaj chwilę.",
+    "onlyCreatorCanRate": "❌ Tylko osoba, która otworzyła to zgłoszenie, może je ocenić."
   },
   "priorities": {
     "low": "🟢 Niski",

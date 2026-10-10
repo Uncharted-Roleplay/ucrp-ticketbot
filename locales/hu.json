@@ -256,7 +256,8 @@
     "feedbackCommentSaved": "✅ A megjegyzésed hozzáadva.",
     "orphanedTicketReason": "A ticket csatornája már nem létezik",
     "cannotCreateTickets": "❌ Nem nyithatsz ticketet.",
-    "ticketOpenInProgress": "⏳ A ticketed már készül, kérlek várj egy pillanatot."
+    "ticketOpenInProgress": "⏳ A ticketed már készül, kérlek várj egy pillanatot.",
+    "onlyCreatorCanRate": "❌ Csak az értékelheti ezt a ticketet, aki megnyitotta."
   },
   "priorities": {
     "low": "🟢 Alacsony",

@@ -256,7 +256,8 @@
     "feedbackCommentSaved": "✅ Your comment has been added.",
     "orphanedTicketReason": "Ticket channel no longer exists",
     "cannotCreateTickets": "❌ You are not allowed to open tickets.",
-    "ticketOpenInProgress": "⏳ Your ticket is already being created, please wait a moment."
+    "ticketOpenInProgress": "⏳ Your ticket is already being created, please wait a moment.",
+    "onlyCreatorCanRate": "❌ Only the person who opened this ticket can rate it."
   },
   "priorities": {
     "low": "🟢 Low",
