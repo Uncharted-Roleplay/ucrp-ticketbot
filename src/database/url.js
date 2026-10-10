@@ -28,7 +28,9 @@ const DEFAULT_SQLITE_PATH = path.resolve(__dirname, '../../data/tickets.db');
  * DATABASE_URL must not end up in the journal with the credentials in it.
  */
 function redactUrl(urlStr) {
-  return String(urlStr ?? '').replace(/(\/\/[^:/@]*:)[^@]*@/, '$1***@');
+  // Greedy up to the LAST "@": an unencoded "@" inside the password must not
+  // leave its tail visible. Over-masking a stray "@" later in the URL is fine.
+  return String(urlStr ?? '').replace(/(\/\/[^:/@]*:).*@/, '$1***@');
 }
 
 function parseDatabaseUrl(urlStr) {

@@ -63,3 +63,7 @@ test('a malformed DATABASE_URL error does not contain the password', () => {
     (err) => !err.message.includes('hunter2'),
   );
 });
+
+test('redactUrl masks a password containing an unencoded @', () => {
+  assert.equal(redactUrl('postgres://bot:p@ss@host/db'), 'postgres://bot:***@host/db');
+});
