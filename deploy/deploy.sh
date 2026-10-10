@@ -66,10 +66,10 @@ if ! ssh "$HOST" "test -x $APP/runtime/$NODE_DIST/bin/node"; then
     || { echo "[deploy] node checksum mismatch" >&2; exit 1; }
   ssh "$HOST" "tar -xJf - -C $APP/runtime && chown -R root:root $APP/runtime/$NODE_DIST" < "$WORK/$NODE_DIST.tar.xz"
 fi
-ssh "$HOST" "ln -sfn $APP/runtime/$NODE_DIST $APP/runtime/node && $APP/runtime/node/bin/node --version" \
-  | sed 's/^/[deploy] server node: /'
 
 # ── 3. Upload and activate ────────────────────────────────────────────────────
+# Few connections on purpose: OVH rate-limits SSH (ufw limit), and a burst of
+# reconnects locks us out for a while.
 ssh "$HOST" "cat > $APP/releases/.incoming-$REL.tgz" < "$WORK/release.tgz"
-ssh "$HOST" "bash -s -- activate $REL" < "$REPO/deploy/remote.sh"
+ssh "$HOST" "bash -s -- activate $REL $NODE_DIST" < "$REPO/deploy/remote.sh"
 log "done: $REL"

@@ -2,7 +2,7 @@
 # Server-side release management for ucrp-ticketbot. Runs ON THE SERVER as root;
 # deploy.sh / rollback.sh pipe it over ssh.
 #
-#   remote.sh activate <release>   unpack releases/.incoming-<release>.tgz, wire it
+#   remote.sh activate <release> [node-dist]   unpack releases/.incoming-<release>.tgz, wire it
 #                                  to the shared config/data, switch `current`,
 #                                  restart and health-check (auto-rollback)
 #   remote.sh rollback             switch `current` to the previous release
@@ -45,11 +45,19 @@ restart_and_check() {
 }
 
 activate() {
-  local rel="$1"
+  local rel="$1" node_dist="${2:-}"
   [[ "$rel" =~ ^[0-9A-Za-z._-]+$ ]] || fail "bad release name: $rel"
   local dir="$APP/releases/$rel" tgz="$APP/releases/.incoming-$rel.tgz"
   [ -f "$tgz" ] || fail "missing upload $tgz"
+
+  # Point runtime/node at the requested Node version (installed by deploy.sh).
+  if [ -n "$node_dist" ]; then
+    [[ "$node_dist" =~ ^node-v[0-9.]+-linux-x64$ ]] || fail "bad node dist: $node_dist"
+    [ -x "$APP/runtime/$node_dist/bin/node" ] || fail "node runtime $node_dist is not installed"
+    ln -sfn "$APP/runtime/$node_dist" "$APP/runtime/node"
+  fi
   [ -x "$NODE" ] || fail "node runtime missing at $NODE"
+  log "node $("$NODE" --version)"
 
   rm -rf "$dir"
   mkdir "$dir"
@@ -137,7 +145,7 @@ prune() {
 }
 
 case "${1:-}" in
-  activate) activate "${2:?release name required}" ;;
+  activate) activate "${2:?release name required}" "${3:-}" ;;
   rollback) rollback ;;
   *) fail "usage: remote.sh activate <release> | rollback" ;;
 esac
