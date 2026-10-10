@@ -4,7 +4,8 @@
  * Uses native fetch (Node 22+) — no extra dependencies needed.
  */
 
-const REPO = 'MSK-Scripts/discord_ticketbot';
+// UCRP fork: check our own releases, not upstream's (we merge upstream ourselves).
+const REPO = 'Uncharted-Roleplay/ucrp-ticketbot';
 const API_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
 
 const reset  = '\x1b[0m';

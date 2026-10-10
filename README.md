@@ -22,6 +22,12 @@ It is a **plain Discord bot**: no game server, no FiveM, no ESX or QBCore, no fr
 
 </div>
 
+> [!NOTE]
+> **This is the Uncharted Roleplay (UCRP) fork** of [MSK Ticket Bot](https://github.com/MSK-Scripts/discord_ticketbot) by MSK Scripts, run as the UCRP Discord ticket bot.
+> Source for the version we run: https://github.com/Uncharted-Roleplay/ucrp-ticketbot (AGPL-3.0, see [LICENSE.md](LICENSE.md) and [NOTICE](NOTICE)).
+> Fork changes: upstream's image, mirror and release workflows are removed; the update check points at this repo; the dashboard's Update button is disabled, since we deploy builds instead of pulling on the server.
+> Everything below is upstream's README.
+
 
 ---
 

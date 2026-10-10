@@ -88,9 +88,9 @@ test('parseRelease accepts a normal release and keeps its url', () => {
   assert.deepStrictEqual(
     parseRelease({
       tag_name: 'v2.16.0',
-      html_url: 'https://github.com/MSK-Scripts/discord_ticketbot/releases/tag/v2.16.0',
+      html_url: 'https://github.com/Uncharted-Roleplay/ucrp-ticketbot/releases/tag/v2.16.0',
     }),
-    { version: '2.16.0', url: 'https://github.com/MSK-Scripts/discord_ticketbot/releases/tag/v2.16.0' },
+    { version: '2.16.0', url: 'https://github.com/Uncharted-Roleplay/ucrp-ticketbot/releases/tag/v2.16.0' },
   );
 });
 
@@ -113,7 +113,7 @@ test('parseRelease falls back when the url points somewhere else', () => {
   for (const url of ['https://evil.example/x', 'javascript:alert(1)', 'https://github.com/other/repo/releases', 42]) {
     assert.strictEqual(
       parseRelease({ tag_name: '1.0.0', html_url: url }).url,
-      'https://github.com/MSK-Scripts/discord_ticketbot/releases',
+      'https://github.com/Uncharted-Roleplay/ucrp-ticketbot/releases',
     );
   }
 });

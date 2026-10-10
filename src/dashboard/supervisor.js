@@ -10,7 +10,6 @@
  */
 
 const { fork } = require('child_process');
-const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const EventEmitter = require('events');
@@ -246,30 +245,13 @@ class BotSupervisor extends EventEmitter {
   }
 
   /**
-   * git pull + npm install, then restart the bot.
-   * Runs in the repo root; output is streamed into the log ring buffer so the
-   * operator can see what happened in the dashboard console.
+   * Upstream ran git pull + npm install here, then restarted the bot.
+   *
+   * UCRP fork: disabled. Releases are built on Windows and deployed as
+   * artifacts; a git pull / npm install on the server would replace them.
    */
   async update() {
-    if (this.busy) return { ok: false, error: 'Another operation is already running.' };
-    this.busy = true;
-
-    try {
-      this.pushLog('==> [supervisor] git pull');
-      const pull = await this.run('git', ['pull']);
-      if (!pull.ok) return { ok: false, error: 'git pull failed', detail: pull.output };
-
-      this.pushLog('==> [supervisor] npm install --omit=dev');
-      const install = await this.run('npm', ['install', '--omit=dev']);
-      if (!install.ok) return { ok: false, error: 'npm install failed', detail: install.output };
-
-      this.pushLog('==> [supervisor] restarting bot with the new version');
-      await this.restart();
-
-      return { ok: true, output: `${pull.output}\n${install.output}`.trim() };
-    } finally {
-      this.busy = false;
-    }
+    return { ok: false, error: 'Updating from the dashboard is disabled. New versions are deployed from a build, not pulled on the server.' };
   }
 
   // ── IPC to the bot ─────────────────────────────────────────────────────────
@@ -339,26 +321,6 @@ class BotSupervisor extends EventEmitter {
           resolve({ ok: false, error: `Could not reach the bot: ${err.message}` });
         }
       });
-    });
-  }
-
-  /** Run a command in the repo root, capturing its output into the log buffer. */
-  run(cmd, args) {
-    return new Promise((resolve) => {
-      // shell: true so `npm` resolves to npm.cmd on Windows.
-      const proc = spawn(cmd, args, { cwd: ROOT, shell: true });
-      let output = '';
-
-      const collect = (d) => {
-        const text = d.toString();
-        output += text;
-        this.pushLog(text);
-      };
-      proc.stdout?.on('data', collect);
-      proc.stderr?.on('data', collect);
-
-      proc.on('error', (err) => resolve({ ok: false, output: `${output}\n${err.message}` }));
-      proc.on('close', (code) => resolve({ ok: code === 0, output: output.trim() }));
     });
   }
 }
