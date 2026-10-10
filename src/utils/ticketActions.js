@@ -1175,6 +1175,7 @@ module.exports = {
   buildTicketButtons,
   buildClosedButtons,
   getDeleteOnCloseDelayMs,
+  buildTranscriptFile,
   deleteLeftoverClosedChannels,
   refreshTicketMessage,
   updateChannelTopic,

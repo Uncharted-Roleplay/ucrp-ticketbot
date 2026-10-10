@@ -322,6 +322,75 @@ async function getAllOpenTickets(guildId, type = null) {
   return activeDriver.all("SELECT * FROM tickets WHERE guild_id = ? AND status = 'open'", [guildId]);
 }
 
+// ─── Ticket history (/history) ────────────────────────────────────────────────
+
+/**
+ * WHERE fragment that limits tickets to the types a staff member handles.
+ *
+ * @param {{ allowedTypes: string[], includeOtherTypes: boolean, configuredTypes: string[] }} scope
+ *   allowedTypes: codeNames they are staff for. includeOtherTypes: also tickets
+ *   whose type is not in configuredTypes (a type later removed from the config).
+ * @returns {{ sql: string, params: string[] }}
+ */
+function historyTypeScope(scope) {
+  const parts  = [];
+  const params = [];
+  if (scope.allowedTypes.length > 0) {
+    parts.push(`t.type IN (${scope.allowedTypes.map(() => '?').join(', ')})`);
+    params.push(...scope.allowedTypes);
+  }
+  if (scope.includeOtherTypes) {
+    if (scope.configuredTypes.length > 0) {
+      parts.push(`t.type NOT IN (${scope.configuredTypes.map(() => '?').join(', ')})`);
+      params.push(...scope.configuredTypes);
+    } else {
+      parts.push('1 = 1');
+    }
+  }
+  return { sql: parts.length > 0 ? `(${parts.join(' OR ')})` : '1 = 0', params };
+}
+
+// Everything the history views show, without the (large) transcript itself.
+const HISTORY_COLUMNS = `t.id, t.type, t.status, t.priority, t.created_at, t.closed_at, t.closed_by,
+  t.claimed_by, t.close_reason, t.creator_id, t.channel_id, r.rating, r.comment AS rating_comment,
+  CASE WHEN t.transcript IS NULL THEN 0 ELSE 1 END AS has_transcript`;
+
+/**
+ * One page of a user's tickets (newest first), limited to the given type scope.
+ * @returns {Promise<{ total: number, rows: object[] }>}
+ */
+async function getTicketHistory(userId, guildId, scope, { limit = 5, offset = 0 } = {}) {
+  const ts     = historyTypeScope(scope);
+  const where  = `t.creator_id = ? AND t.guild_id = ? AND ${ts.sql}`;
+  const params = [userId, guildId, ...ts.params];
+
+  const total = num((await activeDriver.get(`SELECT COUNT(*) AS c FROM tickets t WHERE ${where}`, params)).c);
+  const lim   = Math.min(Math.max(Math.trunc(Number(limit)) || 5, 1), 25);
+  const off   = Math.max(Math.trunc(Number(offset)) || 0, 0);
+  const rows  = await activeDriver.all(
+    `SELECT ${HISTORY_COLUMNS} FROM tickets t LEFT JOIN ratings r ON r.ticket_id = t.id
+     WHERE ${where} ORDER BY t.id DESC LIMIT ${lim} OFFSET ${off}`,
+    params,
+  );
+  return { total, rows };
+}
+
+/** One ticket for the history detail view (no transcript), or undefined. */
+async function getTicketHistoryEntry(ticketId, guildId) {
+  return activeDriver.get(
+    `SELECT ${HISTORY_COLUMNS} FROM tickets t LEFT JOIN ratings r ON r.ticket_id = t.id
+     WHERE t.id = ? AND t.guild_id = ?`,
+    [ticketId, guildId],
+  );
+}
+
+/** The stored transcript HTML of a ticket, or null. */
+async function getTicketTranscript(ticketId, guildId) {
+  const row = await activeDriver.get('SELECT transcript FROM tickets WHERE id = ? AND guild_id = ?', [ticketId, guildId]);
+  const html = row?.transcript ?? null;
+  return Buffer.isBuffer(html) ? html.toString('utf-8') : html;
+}
+
 /** Closed tickets of a guild with closed_at >= sinceMs (deleteOnClose sweep). */
 async function getRecentlyClosedTickets(guildId, sinceMs) {
   return activeDriver.all(
@@ -625,7 +694,7 @@ async function getDashboardAudit(guildId, limit = 100) {
 module.exports = {
   initDatabase, openDatabase, closeDatabase,
   createTicket, getTotalTicketCount, getTicketByChannel, getTicketById,
-  getOpenTicketsByUser, getAllOpenTickets, getRecentlyClosedTickets, closeTicket, reopenTicket, claimTicket, unclaimTicket,
+  getOpenTicketsByUser, getAllOpenTickets, getRecentlyClosedTickets, getTicketHistory, getTicketHistoryEntry, getTicketTranscript, closeTicket, reopenTicket, claimTicket, unclaimTicket,
   setPriority, setType, updateLastActivity, setStaffReminded, setAutoClosePaused,
   lockTicket, unlockTicket, setNotifyOnReply, setLastNotifySent,
   getInactiveTickets, getTicketsNeedingStaffReminder,
