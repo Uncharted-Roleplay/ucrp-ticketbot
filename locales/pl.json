@@ -254,7 +254,9 @@
     "feedbackCommentFull": "❌ Ta opinia ma już maksymalną liczbę komentarzy.",
     "feedbackCommentFailed": "❌ Nie udało się zaktualizować wiadomości z opinią.",
     "feedbackCommentSaved": "✅ Twój komentarz został dodany.",
-    "orphanedTicketReason": "Kanał zgłoszenia już nie istnieje"
+    "orphanedTicketReason": "Kanał zgłoszenia już nie istnieje",
+    "cannotCreateTickets": "❌ Nie możesz otwierać zgłoszeń.",
+    "ticketOpenInProgress": "⏳ Twoje zgłoszenie jest już tworzone, poczekaj chwilę."
   },
   "priorities": {
     "low": "🟢 Niski",

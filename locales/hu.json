@@ -254,7 +254,9 @@
     "feedbackCommentFull": "❌ Ez az értékelés már elérte a megjegyzések maximális számát.",
     "feedbackCommentFailed": "❌ Az értékelés üzenetét nem sikerült frissíteni.",
     "feedbackCommentSaved": "✅ A megjegyzésed hozzáadva.",
-    "orphanedTicketReason": "A ticket csatornája már nem létezik"
+    "orphanedTicketReason": "A ticket csatornája már nem létezik",
+    "cannotCreateTickets": "❌ Nem nyithatsz ticketet.",
+    "ticketOpenInProgress": "⏳ A ticketed már készül, kérlek várj egy pillanatot."
   },
   "priorities": {
     "low": "🟢 Alacsony",

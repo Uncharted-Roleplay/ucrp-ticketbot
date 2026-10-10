@@ -254,7 +254,9 @@
     "feedbackCommentFull": "❌ This rating already carries the maximum number of comments.",
     "feedbackCommentFailed": "❌ The rating message could not be updated.",
     "feedbackCommentSaved": "✅ Your comment has been added.",
-    "orphanedTicketReason": "Ticket channel no longer exists"
+    "orphanedTicketReason": "Ticket channel no longer exists",
+    "cannotCreateTickets": "❌ You are not allowed to open tickets.",
+    "ticketOpenInProgress": "⏳ Your ticket is already being created, please wait a moment."
   },
   "priorities": {
     "low": "🟢 Low",

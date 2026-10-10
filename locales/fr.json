@@ -254,7 +254,9 @@
     "feedbackCommentFull": "❌ Cet avis a déjà atteint le nombre maximal de commentaires.",
     "feedbackCommentFailed": "❌ Le message d'avis n'a pas pu être mis à jour.",
     "feedbackCommentSaved": "✅ Votre commentaire a été ajouté.",
-    "orphanedTicketReason": "Le salon du ticket n'existe plus"
+    "orphanedTicketReason": "Le salon du ticket n'existe plus",
+    "cannotCreateTickets": "❌ Vous n'êtes pas autorisé à ouvrir des tickets.",
+    "ticketOpenInProgress": "⏳ Votre ticket est déjà en cours de création, veuillez patienter."
   },
   "priorities": {
     "low": "🟢 Basse",

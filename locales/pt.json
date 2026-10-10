@@ -254,7 +254,9 @@
     "feedbackCommentFull": "❌ Esta avaliação já tem o número máximo de comentários.",
     "feedbackCommentFailed": "❌ Não foi possível atualizar a mensagem da avaliação.",
     "feedbackCommentSaved": "✅ O teu comentario foi adicionado.",
-    "orphanedTicketReason": "O canal do ticket já não existe"
+    "orphanedTicketReason": "O canal do ticket já não existe",
+    "cannotCreateTickets": "❌ Não tens permissão para abrir tickets.",
+    "ticketOpenInProgress": "⏳ O teu ticket já está a ser criado, aguarda um momento."
   },
   "priorities": {
     "low": "🟢 Baixa",
