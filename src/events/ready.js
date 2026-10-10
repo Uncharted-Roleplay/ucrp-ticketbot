@@ -1,7 +1,7 @@
 const { ActivityType } = require('discord.js');
 const { getInactiveTickets, getTicketsNeedingStaffReminder, setStaffReminded, getStats, getPanelMessage, deletePanelMessage, getAllOpenTickets } = require('../database');
 const { buildTicketPanel } = require('../utils/panel');
-const { performClose, fetchTicketChannel, getEffectiveStaffRoles } = require('../utils/ticketActions');
+const { performClose, fetchTicketChannel, getEffectiveStaffRoles, deleteLeftoverClosedChannels } = require('../utils/ticketActions');
 const { registerBotBridge } = require('../dashboard/botBridge');
 const { checkBotPermissions } = require('../utils/permissionCheck');
 const { startUpdateNotifier } = require('../utils/updateNotice');
@@ -60,6 +60,10 @@ module.exports = {
     // ── Orphaned tickets ──────────────────────────────────────────────────────
     // Channels deleted while the bot was offline never fired channelDelete.
     reconcileOpenTickets(client);
+
+    // deleteOnClose: channels whose deletion countdown was lost to a restart.
+    deleteLeftoverClosedChannels(client, process.env.GUILD_ID)
+      .catch(err => client.logger.error('[Close] Leftover channel sweep failed:', err));
 
     // ── Auto-close loop ───────────────────────────────────────────────────────
     const autoCfg = client.config.autoClose;

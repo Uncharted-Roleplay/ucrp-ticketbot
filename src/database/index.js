@@ -322,6 +322,14 @@ async function getAllOpenTickets(guildId, type = null) {
   return activeDriver.all("SELECT * FROM tickets WHERE guild_id = ? AND status = 'open'", [guildId]);
 }
 
+/** Closed tickets of a guild with closed_at >= sinceMs (deleteOnClose sweep). */
+async function getRecentlyClosedTickets(guildId, sinceMs) {
+  return activeDriver.all(
+    "SELECT * FROM tickets WHERE guild_id = ? AND status = 'closed' AND closed_at >= ?",
+    [guildId, sinceMs],
+  );
+}
+
 async function lockTicket(channelId) {
   return activeDriver.run('UPDATE tickets SET locked = 1 WHERE channel_id = ?', [channelId]);
 }
@@ -617,7 +625,7 @@ async function getDashboardAudit(guildId, limit = 100) {
 module.exports = {
   initDatabase, openDatabase, closeDatabase,
   createTicket, getTotalTicketCount, getTicketByChannel, getTicketById,
-  getOpenTicketsByUser, getAllOpenTickets, closeTicket, reopenTicket, claimTicket, unclaimTicket,
+  getOpenTicketsByUser, getAllOpenTickets, getRecentlyClosedTickets, closeTicket, reopenTicket, claimTicket, unclaimTicket,
   setPriority, setType, updateLastActivity, setStaffReminded, setAutoClosePaused,
   lockTicket, unlockTicket, setNotifyOnReply, setLastNotifySent,
   getInactiveTickets, getTicketsNeedingStaffReminder,

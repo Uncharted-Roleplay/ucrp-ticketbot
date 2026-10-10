@@ -122,7 +122,11 @@
     "transcriptToUser": true,                 // Include the transcript (link or file) in the close DM; false = staff only
     "askReason": true,
     "whoCanCloseTicket": "EVERYONE",          // "EVERYONE" or "STAFFONLY"
-    "closeTicketCategoryId": ""               // Category ID to move closed tickets to, or "" to not move
+    "closeTicketCategoryId": "",              // Category ID to move closed tickets to, or "" to not move
+    "deleteOnClose": false,                   // true = delete the channel after closing (transcript, log,
+                                              // DM and rating still happen first). Ignores
+                                              // closeTicketCategoryId, no reopen button, rating always by DM.
+    "deleteDelaySeconds": 10                  // Countdown before the channel is deleted (0–3600)
   },
 
   // ─── Reopen Options ──────────────────────────────────────────────────────────

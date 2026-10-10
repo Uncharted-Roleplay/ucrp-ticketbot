@@ -491,13 +491,21 @@ async function performCloseInner(client, channel, ticket, closer, reason) {
   await db.closeTicket(channel.id, closer.id, reason, transcriptHtml);
   const updatedTicket = await db.getTicketByChannel(channel.id);
 
-  // 4. Post closed embed + delete button (+ optional reopen button)
-  const deleteRow = buildClosedButtons(client);
+  // 4. Post closed embed. With deleteOnClose the channel is about to go, so
+  //    instead of the delete/reopen buttons it shows the countdown.
+  const deleteDelayMs = getDeleteOnCloseDelayMs(cfg);
 
-  await channel.send({
-    embeds:     [ticketClosedEmbed(client, { closer, reason })],
-    components: [deleteRow],
-  }).catch(() => null);
+  if (deleteDelayMs !== null) {
+    await channel.send({
+      content: client.t('messages.ticketDeletingIn', { seconds: String(Math.round(deleteDelayMs / 1000)) }),
+      embeds:  [ticketClosedEmbed(client, { closer, reason })],
+    }).catch(() => null);
+  } else {
+    await channel.send({
+      embeds:     [ticketClosedEmbed(client, { closer, reason })],
+      components: [buildClosedButtons(client)],
+    }).catch(() => null);
+  }
 
   // 5. Remove the creator's and every /add-ed user's access, so nobody outside
   //    the staff keeps reading the channel after the close.
@@ -557,7 +565,9 @@ async function performCloseInner(client, channel, ticket, closer, reason) {
     const ratingRow   = buildRatingRow(ticket.id);
     const ratingEmbed = ratingRequestEmbed(client, { count: ticket.id });
 
-    if (ratingCfg.dmUser) {
+    // A rating request posted in a channel that is about to be deleted could
+    // never be answered, so deleteOnClose always asks by DM.
+    if (ratingCfg.dmUser || deleteDelayMs !== null) {
       try {
         const creator = await channel.guild.members.fetch(ticket.creator_id);
         await creator.user.send({ embeds: [ratingEmbed], components: [ratingRow] });
@@ -572,6 +582,13 @@ async function performCloseInner(client, channel, ticket, closer, reason) {
         components: [ratingRow],
       }).catch(() => null);
     }
+  }
+
+  // 9. deleteOnClose: delete the channel after the countdown; moving and
+  //    renaming it would be pointless.
+  if (deleteDelayMs !== null) {
+    scheduleClosedChannelDeletion(client, channel, ticket.id, deleteDelayMs);
+    return;
   }
 
   // 9. Move to closed category — awaited last so it never blocks steps 5–8
@@ -967,6 +984,73 @@ async function editParticipantAccess(client, channel, ticket, perms) {
   }
 }
 
+// ─── Delete on close ──────────────────────────────────────────────────────────
+
+const MAX_DELETE_DELAY_SECONDS = 3600;
+
+/**
+ * Delay before a closed ticket's channel is deleted, or null when
+ * closeOption.deleteOnClose is off. deleteDelaySeconds is clamped to 0..3600
+ * (default 10), so a typo cannot keep a channel around for days.
+ *
+ * @param {object} closeOption  client.config.closeOption
+ * @returns {number|null} milliseconds
+ */
+function getDeleteOnCloseDelayMs(closeOption) {
+  if (!closeOption?.deleteOnClose) return null;
+  const raw = Number(closeOption.deleteDelaySeconds ?? 10);
+  const seconds = Number.isFinite(raw) ? Math.min(Math.max(raw, 0), MAX_DELETE_DELAY_SECONDS) : 10;
+  return seconds * 1000;
+}
+
+/**
+ * Delete a closed ticket's channel after delayMs. Skipped if the ticket was
+ * reopened in the meantime (/reopen). A bot restart drops the timer; the
+ * startup sweep (deleteLeftoverClosedChannels) catches those channels.
+ */
+function scheduleClosedChannelDeletion(client, channel, ticketId, delayMs) {
+  setTimeout(async () => {
+    try {
+      const fresh = await db.getTicketById(ticketId);
+      if (fresh && fresh.status !== 'closed') return; // reopened during the countdown
+      await channel.delete(client.t('messages.closedChannelDeleteReason'));
+      client.logger.info(`[Close] Ticket #${ticketId}: channel deleted after close.`);
+    } catch (err) {
+      if (err?.code !== UNKNOWN_CHANNEL) {
+        client.logger.warn(`[Close] Ticket #${ticketId}: could not delete the channel: ${err.message}`);
+      }
+    }
+  }, delayMs);
+}
+
+/**
+ * With deleteOnClose on, delete channels of tickets closed in the last
+ * `withinMs` whose deletion countdown was lost (bot restart) and is overdue.
+ *
+ * @returns {Promise<number>} channels deleted
+ */
+async function deleteLeftoverClosedChannels(client, guildId, withinMs = 7 * 24 * 3_600_000) {
+  const delayMs = getDeleteOnCloseDelayMs(client.config.closeOption);
+  if (delayMs === null) return 0;
+
+  const now = Date.now();
+  const tickets = await db.getRecentlyClosedTickets(guildId, now - withinMs);
+  let deleted = 0;
+  for (const ticket of tickets) {
+    if (Number(ticket.closed_at) + delayMs > now) continue; // its own countdown is still running
+    const channel = await client.channels.fetch(ticket.channel_id).catch(() => null);
+    if (!channel) continue;
+    try {
+      await channel.delete(client.t('messages.closedChannelDeleteReason'));
+      deleted++;
+    } catch (err) {
+      client.logger.warn(`[Close] Ticket #${ticket.id}: could not delete leftover channel: ${err.message}`);
+    }
+  }
+  if (deleted > 0) client.logger.info(`[Close] Deleted ${deleted} leftover closed ticket channel(s).`);
+  return deleted;
+}
+
 // Discord's per-file limit for bot uploads to non-boosted destinations is 10 MB.
 const MAX_TRANSCRIPT_FILE_BYTES = 9 * 1024 * 1024;
 
@@ -1090,6 +1174,8 @@ module.exports = {
   fetchTicketChannel,
   buildTicketButtons,
   buildClosedButtons,
+  getDeleteOnCloseDelayMs,
+  deleteLeftoverClosedChannels,
   refreshTicketMessage,
   updateChannelTopic,
   getEffectiveStaffRoles,
