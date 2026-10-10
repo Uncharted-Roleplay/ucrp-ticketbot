@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Deploy scripts run under bash on Linux: never check them out with CRLF.
+deploy/*.sh text eol=lf
+deploy/*.service text eol=lf
