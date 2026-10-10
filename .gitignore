@@ -79,3 +79,4 @@ data/dashboard-favicon.*
 # Config (contains IDs/tokens)
 config/config.jsonc
 config/snippets.jsonc
+deploy/release-*.tgz
