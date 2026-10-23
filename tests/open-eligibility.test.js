@@ -74,7 +74,7 @@ test('concurrent opens by one user create only one ticket', async () => {
       },
     },
   };
-  const client = { ...fakeClient({ maxTicketOpened: 1, ticketTypes: [] }), locale: {}, t: (k) => k };
+  const client = { ...fakeClient({ maxTicketOpened: 1, ticketTypes: [] }), locale: {}, t: (k) => k, user: { id: 'bot' } };
   const type = { codeName: 'support', cantAccess: [], staffRoles: [] };
   const user = { id: 'racer', username: 'racer' };
 
@@ -86,4 +86,31 @@ test('concurrent opens by one user create only one ticket', async () => {
   assert.equal(second.channel, null);
   assert.equal(second.refusal.key, 'messages.ticketOpenInProgress');
   assert.equal(created, 1);
+});
+
+test('the bot gives itself access to a new ticket channel', async () => {
+  const { PermissionFlagsBits } = require('discord.js');
+  let overwrites;
+  const guild = {
+    id: GUILD,
+    roles: { everyone: 'everyone', cache: new Set() },
+    members: { fetch: async (id) => fakeMember(id) },
+    channels: {
+      create: async (opts) => {
+        overwrites = opts.permissionOverwrites;
+        throw new Error('stop after channel creation');
+      },
+    },
+  };
+  const client = { ...fakeClient({ maxTicketOpened: 0, ticketTypes: [] }), locale: {}, t: (k) => k, user: { id: 'bot' } };
+  const type = { codeName: 'support', cantAccess: [], staffRoles: [] };
+
+  await openTicket(client, guild, { id: 'self-check', username: 'self-check' }, type, []).catch(() => null);
+
+  // Without Administrator the @everyone deny would lock the bot out as well.
+  const own = overwrites.find(o => o.id === 'bot');
+  assert.ok(own, 'no overwrite for the bot itself');
+  for (const flag of ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks']) {
+    assert.ok(own.allow.includes(PermissionFlagsBits[flag]), `bot overwrite lacks ${flag}`);
+  }
 });
